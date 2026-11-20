@@ -1,0 +1,25 @@
+# 运行数据（不提交）
+music.db
+music.db-*
+*.db-wal
+*.db-shm
+cache/
+__pycache__/
+*.pyc
+
+# 日志与运行时
+*.log
+service.pid
+advance.log
+
+# 备份
+*.bak
+*.bak-*
+*.orig
+*.rej
+
+# 凭据
+secrets/
+*.cookie
+.env
+.env.*
