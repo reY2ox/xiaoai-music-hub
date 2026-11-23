@@ -14,6 +14,25 @@
    小爱音箱（UPnP MediaRenderer）
 ```
 
+## 项目结构
+
+```
+.
+├── app.py                入口：建表、起线程、启动 HTTP
+├── core/
+│   ├── config.py         常量、设置、音质档位
+│   ├── dlna.py           UPnP 控制（播放/暂停/音量/状态/发现）
+│   ├── netease.py        网易云接口（搜索/取链/账号/歌单）
+│   ├── library.py        本地曲库（扫描/转码/流输出）
+│   ├── downloader.py     下载队列（持久化/并发/重试/续传）
+│   ├── player.py         播放调度（队列/模式/续播/暂停恢复）
+│   └── api.py            HTTP 路由（薄层）
+├── web/index.html        前端
+└── mcp_server.py         语音接口
+```
+
+改哪里：换音源改 `netease.py`；播放行为改 `player.py`；下载策略改 `downloader.py`；页面改 `web/index.html`。
+
 ## 特性
 
 - **点歌**：搜网易云，取 320k 直链，推给音箱播放
@@ -70,6 +89,33 @@ WantedBy=multi-user.target
 | `quiet_hours` | `23:30-08:00` | 夜间免打扰，期间不自动续播；`/quiet?off=1` 关闭 |
 
 凭据文件默认写到 `./secrets/netease.cookie`（代码里是绝对路径，部署时按需调整）。
+
+## 音质
+
+默认 320k，可在页面或接口切换：
+
+| 档位 | 参数 | 说明 |
+|---|---|---|
+| `standard` | 192k mp3 | 省流量 |
+| `high` | 320k mp3 | 默认 |
+| `lossless` | FLAC | 需 VIP；实测小爱 LX06 可直解 |
+
+```bash
+curl "http://127.0.0.1:8010/quality"            # 查看
+curl "http://127.0.0.1:8010/quality?set=lossless"
+```
+
+下载可单独指定音质：`/download/song?...&quality=lossless`
+
+## 下载队列
+
+任务持久化在 SQLite，服务重启自动恢复；并发 2（`config.DOWNLOAD_CONCURRENCY`），失败重试 2 次，支持 `.part` 断点续传。
+
+```bash
+curl "http://127.0.0.1:8010/download/playlist?id=3"   # 整张入队
+curl "http://127.0.0.1:8010/download/jobs"            # 队列状态
+curl "http://127.0.0.1:8010/download/retry"           # 重试失败
+```
 
 ## HTTP API
 

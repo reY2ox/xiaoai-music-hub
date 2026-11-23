@@ -43,6 +43,15 @@ TOOLS = [
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
+        "name": "set_quality",
+        "description": "设置当前播放音质：standard(192k) / high(320k) / lossless(无损FLAC)。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"quality": {"type": "string", "enum": ["standard", "high", "lossless"]}},
+            "required": ["quality"],
+        },
+    },
+    {
         "name": "set_volume",
         "description": "设置音箱音量，0-100。",
         "inputSchema": {
@@ -82,6 +91,10 @@ def run_tool(name, args):
         if d.get("state") in (None, "", "STOPPED"):
             return "当前没有在播放。"
         return f"正在播放 {d.get('title')} - {d.get('artist')}，进度 {d.get('position')}。"
+    if name == "set_quality":
+        q = args.get("quality", "high")
+        d = call(f"/quality?set={q}", timeout=10)
+        return f"音质已设为 {d.get('quality')}。"
     if name == "set_volume":
         lv = int(args.get("level", 30))
         call(f"/volume?level={lv}", timeout=10)
