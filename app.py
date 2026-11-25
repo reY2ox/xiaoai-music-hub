@@ -48,6 +48,7 @@ def init_db():
             "ALTER TABLE playlists ADD COLUMN remote_id INTEGER",
             "ALTER TABLE playlists ADD COLUMN cover TEXT",
             "ALTER TABLE playlists ADD COLUMN owner_uid INTEGER",
+            "ALTER TABLE local_tracks ADD COLUMN song_key INTEGER",
         ):
             try:
                 c.execute(ddl)

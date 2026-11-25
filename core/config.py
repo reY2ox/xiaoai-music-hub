@@ -62,9 +62,10 @@ PLAY_MODES = ("sequential", "loop", "single", "shuffle")
 
 # ---------- 数据库 ----------
 def db():
-    c = sqlite3.connect(DB_PATH, timeout=10)
+    c = sqlite3.connect(DB_PATH, timeout=30)
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA journal_mode=WAL")
+    c.execute("PRAGMA busy_timeout=30000")
     return c
 
 

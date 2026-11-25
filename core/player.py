@@ -78,6 +78,17 @@ class Player:
             return {"ok": True, "song": {"name": loc["title"], "artist": loc["artist"]},
                     "state": state, "device": ip, "source": "local"}
 
+        # 优先本地已下载文件，避免重复联网取直链、也不受版权变动影响
+        from . import library
+        loc = library.local_for_song(tr.get("song_id"), tr.get("name"), tr.get("artist"))
+        if loc:
+            library.media_path(loc)
+            url = library.media_url(loc)
+            mime = "audio/flac" if loc["path"].lower().endswith(".flac") else "audio/mpeg"
+            state = dlna.play_url(ip, url, loc["title"], loc["artist"] or "", mime=mime)
+            return {"ok": True, "song": {"name": loc["title"], "artist": loc["artist"]},
+                    "state": state, "device": ip, "source": "local"}
+
         quality = config.get_setting("quality", config.DEFAULT_QUALITY)
         url, code, br, ext = netease.song_url(tr["song_id"], quality)
         if not url:

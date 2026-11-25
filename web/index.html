@@ -145,7 +145,7 @@ border-radius:99px;padding:5px 11px 5px 5px;cursor:pointer;font-size:12px;color:
       <button class=ghost onclick="ncmList()">网易云导入</button>
       <button class=ghost onclick="syncAll()">全部同步</button>
       <button class=primary onclick="playPl()">播放整个歌单</button>
-      <button class=ghost onclick="dlPl()">下载整张</button>
+      <button class=ghost onclick="dlPl()" id=dlwhole>下载整张</button>
     </div>
     <div id=ncmlist></div>
     <div id=tracks></div>
@@ -153,7 +153,7 @@ border-radius:99px;padding:5px 11px 5px 5px;cursor:pointer;font-size:12px;color:
 
   <div id=p5 style="display:none">
     <div class=row style="margin-bottom:8px">
-      <button class=ghost onclick="dlPlaylist()">下载当前歌单</button>
+      <span class=mini>整张下载请到「歌单」页签，选好歌单选下载</span>
       <button class=ghost onclick="dlRetry()">重试失败</button>
       <button class=ghost onclick="dlRescan()">重建曲库索引</button>
     </div>
@@ -238,7 +238,17 @@ async function logout(){await fetch('/account/logout');await loadAccount();close
 
 async function pick(ip){await fetch('/devices/select?ip='+encodeURIComponent(ip));DEV=ip;poll()}
 async function scan(){$('dev').disabled=true;await fetch('/devices/scan');$('dev').disabled=false;boot()}
-function tab(n){[1,2,3,4,5].forEach(i=>{$('tb'+i).className=i===n?'on':'';$('p'+i).style.display=i===n?'none':''}).forEach(()=>{});[1,2,3,4,5].forEach(i=>{$('p'+i).style.display=i===n?'':'none'});if(n===2)loadPl();if(n===3)loadQueue();if(n===4)loadLocal();if(n===5)loadDl()}
+function tab(n){
+ [1,2,3,4,5].forEach(i=>{
+   const b=$('tb'+i), pa=$('p'+i);
+   if(b)b.className=(i===n)?'on':'';
+   if(pa)pa.style.display=(i===n)?'':'none';
+ });
+ if(n===2)loadPl();
+ if(n===3)loadQueue();
+ if(n===4)loadLocal();
+ if(n===5)loadDl();
+}
 
 async function poll(){try{
   const d=await (await fetch('/now')).json();
@@ -265,7 +275,8 @@ async function s(){const q=$('q').value.trim();if(!q)return;
  window._cur=d.songs;
  $('res').innerHTML=d.songs.map((x,i)=>`<div class=item><div><div class=n>${x.name}${x.fee===1?'<span class=vip>VIP</span>':''}</div>
  <div class=m>${x.artist}${x.album?' · '+x.album:''}</div></div>
- <div class=row><button class=ghost onclick="addTo(${i},this)">+ 歌单</button>
+ <div class=row><button class=ghost onclick="dlSearch(${i},this)">下载</button>
+ <button class=ghost onclick="addTo(${i},this)">+ 歌单</button>
  <button class=primary onclick="playNow(${i})">播放</button></div></div>`).join('')}
 async function playNow(i){const d=await (await fetch('/play?q='+encodeURIComponent($('q').value)+'&i='+i)).json();
  if(!d.ok)alert(d.error||'播放失败');poll()}
@@ -286,9 +297,13 @@ async function loadPls(){const d=await (await fetch('/playlists')).json();PLS=d.
  if(CUR_PL)$('pl').value=CUR_PL; loadPl()}
 async function loadPl(){CUR_PL=$('pl').value;if(!CUR_PL)return;
  const d=await (await fetch('/playlist?id='+CUR_PL)).json();
+ const remain=(d.tracks||[]).filter(t=>!t.local_id&&t.song_id).length;
+ const wb=$('dlwhole');
+ if(wb){wb.textContent=remain?`下载整张（剩 ${remain} 首）`:'已全部下载';wb.disabled=!remain;wb.style.opacity=remain?'':'0.45'}
  $('tracks').innerHTML=(d.tracks||[]).map((t,i)=>`<div class=item><div><div class=n>${i+1}. ${t.name}</div>
  <div class=m>${t.artist||''}</div></div><div class=row>
  <button class=primary onclick="playIdx(${i})">播放</button>
+ ${t.local_id?'<button class=ghost disabled style="opacity:.45;cursor:default">已下载</button>':`<button class=ghost onclick="dlTrack(${t.id},this)">下载</button>`}
  <button class=ghost onclick="delTrack(${t.id})">删</button></div></div>`).join('')||'<div class=mini style="padding:8px">空歌单</div>'}
 let DLT=null;
 async function dlPl(){
@@ -340,7 +355,7 @@ async function loadQueue(){try{const d=await (await fetch('/queue')).json();
  $('queued').innerHTML=d.playlist?`<div class=item><div><div class=n>${d.playlist}</div>
  <div class=m>第 ${(d.index||0)+1} / ${d.total} 首</div></div><button class=ghost onclick="nav('next')">下一首</button></div>`
  :'<div class=mini style="padding:8px">还没在放歌单</div>'}catch(e){}}
-let DLT=null;
+
 async function loadDl(){
   const d=await (await fetch('/download/jobs')).json();
   const st=d.stats||{};
@@ -356,10 +371,29 @@ async function loadDl(){
     if(!DLT)DLT=setInterval(loadDl,2000);
   }else if(DLT){clearInterval(DLT);DLT=null;loadLocal()}
 }
-async function dlPlaylist(){if(!CUR_PL)return;
+async function dlPl(){
+  if(!CUR_PL){alert('先选一个歌单');return}
+  const b=event&&event.target;
   const r=await (await fetch('/download/playlist?id='+CUR_PL)).json();
-  if(!r.ok){alert(r.error||'失败');return}
-  loadDl()}
+  if(!r.ok){alert(r.error||'下载失败');return}
+  $('dlplinfo').textContent=r.queued?`已入队 ${r.queued} 首`:'都已下载或在队列中';
+  setTimeout(()=>{$('dlplinfo').textContent=''},4000);
+}
+async function dlTrack(tid,btn){
+  const d=await (await fetch('/playlist?id='+CUR_PL)).json();
+  const t=(d.tracks||[]).find(x=>x.id===tid);
+  if(!t){alert('找不到这首');return}
+  if(t.local_id){alert('这首是本地文件，无需下载');return}
+  if(btn){btn.disabled=true;btn.textContent='…'}
+  const r=await (await fetch('/download/song?song_id='+t.song_id+'&name='+encodeURIComponent(t.name||'')+'&artist='+encodeURIComponent(t.artist||'')+'&album='+encodeURIComponent(t.album||''))).json();
+  if(btn){btn.textContent=r.ok?'已入队':'失败';setTimeout(()=>{btn.textContent='下载';btn.disabled=false},1500)}
+}
+async function dlSearch(i,btn){
+  const s=window._cur[i];
+  if(btn){btn.disabled=true;btn.textContent='…'}
+  const r=await (await fetch('/download/song?song_id='+s.song_id+'&name='+encodeURIComponent(s.name||'')+'&artist='+encodeURIComponent(s.artist||'')+'&album='+encodeURIComponent(s.album||''))).json();
+  if(btn){btn.textContent=r.ok?'已入队':'失败';setTimeout(()=>{btn.textContent='下载';btn.disabled=false},1500)}
+}
 async function dlRetry(){await fetch('/download/retry');loadDl()}
 async function dlRescan(){await fetch('/download/rescan');loadLocal();alert('索引已重建')}
 async function loadQual(){

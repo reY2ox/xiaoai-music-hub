@@ -67,6 +67,47 @@ def list_tracks(query="", limit=200):
         c.close()
 
 
+def local_for_song(song_id, name=None, artist=None):
+    """查找某首网易云歌曲在本地曲库里的文件；没有则返回 None"""
+    if not song_id:
+        return None
+    c = config.db()
+    try:
+        row = c.execute(
+            "SELECT * FROM local_tracks WHERE song_key=?", (int(song_id),)
+        ).fetchone()
+        if row:
+            return dict(row)
+    finally:
+        c.close()
+    # 兜底：用 歌手 - 歌名 推断文件名
+    if name:
+        import re
+        base = re.sub(r'[\\/:*?"<>|]+', "_", f"{artist} - {name}" if artist else name)[:120]
+        for ext in (".flac", ".mp3", ".m4a"):
+            for cand in (os.path.join(config.MUSIC_DIR, artist or "未知歌手", base + ext),
+                         os.path.join(config.MUSIC_DIR, base + ext)):
+                if os.path.exists(cand):
+                    c = config.db()
+                    try:
+                        r = c.execute("SELECT * FROM local_tracks WHERE path=?", (cand,)).fetchone()
+                        if r:
+                            return dict(r)
+                    finally:
+                        c.close()
+    return None
+
+
+def index_downloaded(path, song_id, title=None, artist=None):
+    """把下载完成的文件与网易云 song_id 绑定，便于日后直接播放本地文件"""
+    c = config.db()
+    try:
+        c.execute("UPDATE local_tracks SET song_key=? WHERE path=?", (int(song_id), path))
+        c.commit()
+    finally:
+        c.close()
+
+
 def media_path(track):
     """给音箱播放的实际文件路径，必要时转码成 mp3"""
     src = track["path"]

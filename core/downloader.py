@@ -114,16 +114,32 @@ def stats():
 
 
 def _update(job_id, **kw):
+    """更新任务状态；写库失败只记日志，绝不能中断正在进行的下载"""
     if not kw:
         return
     kw["updated_at"] = _now()
     sets = ",".join(f"{k}=?" for k in kw)
-    c = config.db()
-    try:
-        c.execute(f"UPDATE download_jobs SET {sets} WHERE id=?", (*kw.values(), job_id))
-        c.commit()
-    finally:
-        c.close()
+    for attempt in range(3):
+        c = None
+        try:
+            c = config.db()
+            c.execute(f"UPDATE download_jobs SET {sets} WHERE id=?", (*kw.values(), job_id))
+            c.commit()
+            return
+        except Exception as e:
+            if attempt == 2:
+                try:
+                    print(f"[downloader] update job {job_id} failed: {e!r}", flush=True)
+                except Exception:
+                    pass
+            else:
+                time.sleep(0.5)
+        finally:
+            if c:
+                try:
+                    c.close()
+                except Exception:
+                    pass
 
 
 def retry_failed(job_id=None):
@@ -182,6 +198,7 @@ def _download_one(job):
         if mode == "wb":
             done = 0
         _update(job["id"], bytes_total=total, bytes_done=done)
+        last_pct, last_write = -1, 0.0
         with open(part, mode) as f:
             while True:
                 chunk = r.read(262144)
@@ -190,7 +207,11 @@ def _download_one(job):
                 f.write(chunk)
                 done += len(chunk)
                 pct = int(done * 100 / total) if total else 0
-                _update(job["id"], bytes_done=done, progress=pct)
+                # 降频写库：进度变化 2% 以上或超过 2 秒才写，避免和网页轮询抢锁
+                if pct - last_pct >= 2 or (time.time() - last_write) >= 2:
+                    _update(job["id"], bytes_done=done, progress=pct)
+                    last_pct, last_write = pct, time.time()
+        _update(job["id"], bytes_done=done, progress=100 if total else 0)
 
     if os.path.getsize(part) < 10240:
         os.remove(part)
@@ -240,6 +261,21 @@ def _claim_next():
         c.close()
 
 
+def _mark_playlist_downloaded(song_id, path):
+    """把歌单里对应曲目标记为已下载（填 local_id）"""
+    c = config.db()
+    try:
+        row = c.execute("SELECT id FROM local_tracks WHERE path=?", (path,)).fetchone()
+        if not row:
+            return
+        c.execute(
+            "UPDATE tracks SET local_id=? WHERE song_id=? AND COALESCE(local_id,0)=0",
+            (row["id"], song_id))
+        c.commit()
+    finally:
+        c.close()
+
+
 def _index_file(path, job):
     """下载完成立刻入库，不必等手动扫描"""
     from . import library
@@ -266,6 +302,14 @@ def _worker_loop():
                     _update(job["id"], status="done", progress=100, path=path, error="已存在")
                 if status in ("ok", "skipped") and path:
                     _index_file(path, job)
+                    try:
+                        import re as _re
+                        from . import library as _lib
+                        _lib.scan()
+                        _lib.index_downloaded(path, job["song_id"], job.get("name"), job.get("artist"))
+                        _mark_playlist_downloaded(job["song_id"], path)
+                    except Exception as e:
+                        print(f"[downloader] index failed: {e!r}", flush=True)
                 else:
                     raise RuntimeError(status)
             except Exception as e:
