@@ -488,8 +488,10 @@ def _run_job(job: dict) -> None:
         _handle_transient(job, exc)
         return
     if status in ("ok", "skipped"):
-        _mark_done(job, path, error)
+        # 先入库（scan_file / song_key / tracks.local_id 回填）再标记 done：
+        # 避免 UI 或调用方看到 done 时索引还没写完（测试/前端轮询的竞态）。
         _index_result(job, path)
+        _mark_done(job, path, error)
         return
     _forget_canceled(job_id)
     if status == "canceled":
