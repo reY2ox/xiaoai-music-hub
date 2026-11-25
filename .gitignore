@@ -23,3 +23,26 @@ secrets/
 *.cookie
 .env
 .env.*
+
+# Python 虚拟环境与构建产物
+.venv/
+dist/
+build/
+*.egg-info/
+
+# 测试 / 覆盖率 / lint 缓存
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# 编辑器 / 系统
+.DS_Store
+
+# 前端依赖（本项目前端零构建，仅防误提交）
+node_modules/
+
+# 容器数据卷 / 自定义 DATA_DIR
+deploy/data/
+data/

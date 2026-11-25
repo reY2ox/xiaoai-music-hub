@@ -1,0 +1,2 @@
+# xiaoai-music-hub 运行依赖（Python >= 3.9）
+segno>=1.5,<2

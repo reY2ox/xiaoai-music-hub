@@ -1,0 +1,48 @@
+# xiaoai-music-hub 的 docker compose 部署示例
+#
+# 用法（在仓库根目录执行，路径都相对于本文件解析）：
+#   mkdir -p deploy/data && sudo chown -R 10001:10001 deploy/data   # 镜像内为非 root 用户
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   docker compose -f deploy/docker-compose.yml logs -f
+#   docker compose -f deploy/docker-compose.yml down
+#
+# 数据持久化在 deploy/data/（music.db / music / cache / secrets）。
+
+name: xiaoai-music-hub
+
+services:
+  xiaoai-music-hub:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: xiaoai-music-hub:latest
+    container_name: xiaoai-music-hub
+    restart: unless-stopped
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./data:/data
+    environment:
+      # 默认音箱 IP（网页里也可以切换）
+      XIAOAI_IP: "192.168.3.81"
+      # 关键：bridge 网络下自动探测到的是容器 IP，音箱访问不到。
+      # 必须填「宿主机」的局域网 IP（如宿主机为 192.168.3.100 就填它）。
+      # 若改为 network_mode: host，可留空让程序自动探测。
+      LAN_IP: "192.168.3.100"
+      # Web / API 访问密码；留空表示不鉴权
+      UI_PASSWORD: ""
+      DATA_DIR: "/data"
+      TZ: "Asia/Shanghai"
+      LOG_LEVEL: "INFO"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=3)",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s

@@ -1,0 +1,39 @@
+[Unit]
+Description=xiaoai-music-hub — 小爱音箱 DLNA 音乐中枢
+Documentation=https://github.com/reY2ox/xiaoai-music-hub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 建议使用独立系统用户：sudo useradd --system --home /opt/xiaoai-music-hub --shell /usr/sbin/nologin xiaoai
+User=xiaoai
+Group=xiaoai
+WorkingDirectory=/opt/xiaoai-music-hub
+
+# 环境变量文件（见 deploy/xiaoai-music-hub.env.example）。前缀 "-" 表示文件不存在时不报错。
+EnvironmentFile=-/etc/xiaoai-music-hub.env
+Environment=PYTHONUNBUFFERED=1
+
+# 用仓库内 venv 的 python 运行入口（与 `make install` 一致）
+ExecStart=/opt/xiaoai-music-hub/.venv/bin/python /opt/xiaoai-music-hub/app.py
+
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+KillSignal=SIGTERM
+
+# 日志统一进 journald：journalctl -u xiaoai-music-hub -f
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=xiaoai-music-hub
+
+# 基础加固：只允许写 DATA_DIR（默认为 /opt/xiaoai-music-hub/data）
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/xiaoai-music-hub/data
+
+[Install]
+WantedBy=multi-user.target

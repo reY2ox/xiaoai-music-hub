@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xiaoai-music-hub"
+version = "3.0.0"
+description = "把小米 / 小爱音箱当成 DLNA 播放器的网易云音乐中枢（Web + HTTP API + MCP）"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "reY2ox" }]
+keywords = ["xiaomi", "xiaoai", "dlna", "upnp", "netease", "music", "mcp"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = ["segno>=1.5,<2"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov", "ruff"]
+
+[project.scripts]
+xiaoai-music-hub = "xiaoai_hub.app:main"
+
+[project.urls]
+Homepage = "https://github.com/reY2ox/xiaoai-music-hub"
+Repository = "https://git.hawkyang.cn/reY2ox/xiaoai-music-hub"
+Issues = "https://github.com/reY2ox/xiaoai-music-hub/issues"
+
+[tool.setuptools.packages.find]
+include = ["xiaoai_hub*"]
+
+[tool.setuptools.package-data]
+xiaoai_hub = ["web/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["xiaoai_hub", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+# 行宽由 [tool.ruff] line-length=100 强制（不忽略 E501）
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["xiaoai_hub"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]

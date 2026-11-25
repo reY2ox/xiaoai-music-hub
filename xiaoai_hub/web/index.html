@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0b0d12">
+<meta name="description" content="小爱音箱 DLNA 音乐中枢 · 网易云音源 · 局域网播放控制">
+<title>小爱音乐中枢</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="booting">
+
+<!-- =========================================================================
+     内联 SVG 图标（sprite）：全部 24×24，stroke 1.8，零外部依赖
+     ========================================================================= -->
+<svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <!-- 播放控制 -->
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.6v12.8a.9.9 0 0 0 1.37.77l10.2-6.4a.9.9 0 0 0 0-1.54L9.37 4.83A.9.9 0 0 0 8 5.6Z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="7" y="5" width="3.8" height="14" rx="1.5" fill="currentColor"/><rect x="13.2" y="5" width="3.8" height="14" rx="1.5" fill="currentColor"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2.6" fill="currentColor"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18.4 6.1v11.8"/><path d="M16.2 12 6.4 5.8v12.4L16.2 12Z" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="i-next" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5.6 6.1v11.8"/><path d="M7.8 12l9.8-6.2v12.4L7.8 12Z" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9.5h3.2L12 6.3v11.4L7.2 14.5H4a.8.8 0 0 1-.8-.8v-3.4a.8.8 0 0 1 .8-.8Z"/>
+    <path d="M15.3 9.1a4.1 4.1 0 0 1 0 5.8"/><path d="M18 6.7a7.6 7.6 0 0 1 0 10.6"/>
+  </symbol>
+  <symbol id="i-volume-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 9.5h3.2L12 6.3v11.4L7.2 14.5H4a.8.8 0 0 1-.8-.8v-3.4a.8.8 0 0 1 .8-.8Z"/>
+    <path d="m15.4 9.4 4.6 5.2M20 9.4l-4.6 5.2"/>
+  </symbol>
+
+  <!-- 播放模式 -->
+  <symbol id="i-order" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 6.5h9M4 12h9M4 17.5h6"/><path d="M18.5 6v9.4"/><path d="m16 12.9 2.5 2.5 2.5-2.5"/>
+  </symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m17.6 3.9 2.9 2.9-2.9 2.9"/><path d="M20.5 6.8H8.6A4.6 4.6 0 0 0 4 11.4v.9"/>
+    <path d="m6.4 20.1-2.9-2.9 2.9-2.9"/><path d="M3.5 17.2h11.9a4.6 4.6 0 0 0 4.6-4.6v-.9"/>
+  </symbol>
+  <symbol id="i-repeat-one" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m17.6 3.9 2.9 2.9-2.9 2.9"/><path d="M20.5 6.8H8.6A4.6 4.6 0 0 0 4 11.4v.9"/>
+    <path d="m6.4 20.1-2.9-2.9 2.9-2.9"/><path d="M3.5 17.2h11.9a4.6 4.6 0 0 0 4.6-4.6v-.9"/>
+    <path d="m11.3 10.9 1.6-1v4.6"/>
+  </symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 6.6h3.1c1.2 0 2.2.5 3 1.5l6.2 8c.7.9 1.8 1.4 3 1.4h1.7"/>
+    <path d="m17.9 3.9 3 3-3 3"/><path d="m17.9 14.5 3 3-3 3"/>
+    <path d="M3.5 17.5h3.1c1.2 0 2.2-.5 3-1.5l.8-1.1"/><path d="M14.3 8.3l.6-.7c.7-.9 1.8-1.4 3-1.4h1.6"/>
+  </symbol>
+
+  <!-- 通用 -->
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="10.8" cy="10.8" r="6.3"/><path d="m15.5 15.5 4.7 4.7"/>
+  </symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6.4 6.4 11.2 11.2M17.6 6.4 6.4 17.6"/>
+  </symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6 9.5 6 6 6-6"/>
+  </symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m9.5 6 6 6-6 6"/>
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 5v14M5 12h14"/>
+  </symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.6 6.9h14.8"/><path d="M9.6 6.9V5.3A1.3 1.3 0 0 1 10.9 4h2.2a1.3 1.3 0 0 1 1.3 1.3v1.6"/>
+    <path d="m6.7 6.9.8 12.1a1.7 1.7 0 0 0 1.7 1.6h5.6a1.7 1.7 0 0 0 1.7-1.6l.8-12.1"/>
+    <path d="M10.2 10.7v5.6M13.8 10.7v5.6"/>
+  </symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.6 19.4h3.9L19.4 8.5a2.1 2.1 0 0 0-3-3L5.5 16.4v3Z"/><path d="m13.5 7.5 3 3"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m5 12.6 4.6 4.6L19 7.4"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.4 4.9a1.85 1.85 0 0 1 3.2 0l7 13.4a1.85 1.85 0 0 1-1.6 2.7H5a1.85 1.85 0 0 1-1.6-2.7l7-13.4Z"/>
+    <path d="M12 9.4v4.7"/><path d="M12 17.2h.01"/>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 12a7.5 7.5 0 0 1 12.9-5.2L20 9.3"/><path d="M20 4.5v4.8h-4.8"/>
+    <path d="M19.5 12a7.5 7.5 0 0 1-12.9 5.2L3.6 14.7"/><path d="M4 19.5v-4.8h4.8"/>
+  </symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 4v10.6"/><path d="m7.7 10.6 4.3 4.3 4.3-4.3"/><path d="M4.8 19.3h14.4"/>
+  </symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="16.8" r="1.35" fill="currentColor" stroke="none"/>
+    <path d="M8.2 13.4a5.4 5.4 0 0 1 7.6 0"/><path d="M5.4 10.4a9.4 9.4 0 0 1 13.2 0"/><path d="M2.6 7.4a13.4 13.4 0 0 1 18.8 0"/>
+  </symbol>
+  <symbol id="i-device" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="6.2" y="3.6" width="11.6" height="16.8" rx="3.4"/><circle cx="12" cy="14" r="3.1"/><path d="M9.7 7.4h4.6"/>
+  </symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 5.5H6.8A1.8 1.8 0 0 0 5 7.3v9.4a1.8 1.8 0 0 0 1.8 1.8H14"/>
+    <path d="M11 12h9.2"/><path d="m16.9 8.4 3.6 3.6-3.6 3.6"/>
+  </symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="8.2" r="4.1"/><path d="M4.5 20.2a7.8 7.8 0 0 1 15 0"/>
+  </symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.6" y="3.6" width="6.4" height="6.4" rx="1.3"/><rect x="14" y="3.6" width="6.4" height="6.4" rx="1.3"/><rect x="3.6" y="14" width="6.4" height="6.4" rx="1.3"/>
+    <path d="M14 14h2.7v2.7H14z" fill="currentColor" stroke="none"/><path d="M18.1 14H20.4M14 18.1h2.7M18.1 18.1h2.3"/>
+  </symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 1.9"/>
+  </symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8a8.7 8.7 0 1 0 10.8 10.8Z"/>
+  </symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.1"/><path d="M12 7.8h.01"/>
+  </symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24">
+    <g fill="currentColor">
+      <circle cx="9" cy="6.5" r="1.25"/><circle cx="15" cy="6.5" r="1.25"/>
+      <circle cx="9" cy="12" r="1.25"/><circle cx="15" cy="12" r="1.25"/>
+      <circle cx="9" cy="17.5" r="1.25"/><circle cx="15" cy="17.5" r="1.25"/>
+    </g>
+  </symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5.5"/><path d="M6.6 10.9 12 5.5l5.4 5.4"/>
+  </symbol>
+  <symbol id="i-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 5v13.5"/><path d="M6.6 13.1 12 18.5l5.4-5.4"/>
+  </symbol>
+
+  <!-- 导航 / 分区 -->
+  <symbol id="i-disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="2.5"/>
+    <path d="M6.9 17.1a6.6 6.6 0 0 0 9.3-9.3" opacity=".5"/>
+  </symbol>
+  <symbol id="i-queue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="5.2" cy="6.5" r="1.15" fill="currentColor" stroke="none"/>
+    <circle cx="5.2" cy="12" r="1.15" fill="currentColor" stroke="none"/>
+    <circle cx="5.2" cy="17.5" r="1.15" fill="currentColor" stroke="none"/>
+    <path d="M9.6 6.5h10M9.6 12h10M9.6 17.5h6"/>
+  </symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.9 7.4a2.4 2.4 0 0 1 2.4-2.4h2.8c.7 0 1.3.3 1.7.8l1.2 1.3h5.7a2.4 2.4 0 0 1 2.4 2.4v7.1a2.4 2.4 0 0 1-2.4 2.4H6.3a2.4 2.4 0 0 1-2.4-2.4V7.4Z"/>
+  </symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 7.5h6.3M15.6 7.5H20M4 16.5h3.9M12.9 16.5H20"/>
+    <circle cx="12.9" cy="7.5" r="2.4"/><circle cx="10.3" cy="16.5" r="2.4"/>
+  </symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7.4 18.6h9.1a4 4 0 0 0 .5-7.9 5.5 5.5 0 0 0-10.5-1.1 3.5 3.5 0 0 0 .9 9Z"/>
+    <path d="M12 11.4v4.2"/><path d="m10 13.7 2 2 2-2"/>
+  </symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.6l2.6 5.3 5.8.85-4.2 4.1 1 5.75L12 16.9l-5.2 2.7 1-5.75-4.2-4.1 5.8-.85L12 3.6Z" fill="currentColor"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9.4 17.6V5.4l9.2-2.1v11.9"/><ellipse cx="6.8" cy="17.8" rx="2.7" ry="2.4"/>
+    <ellipse cx="16" cy="15.4" rx="2.7" ry="2.4"/>
+  </symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m3.6 3.9 16.8 16.2"/>
+    <path d="M8.5 13.1a5.7 5.7 0 0 1 6.3-.9"/><path d="M5.4 9.8a10 10 0 0 1 3.4-1.9"/><path d="M18.6 9.8a10 10 0 0 0-3.1-1.8"/>
+    <path d="M12 18.1h.01"/>
+  </symbol>
+
+  <!-- 空状态插画（72×72） -->
+  <symbol id="i-empty-search" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="30" cy="30" r="15.5"/><path d="m41.5 41.5 12 12"/>
+    <path d="M23 30h10M23 35.5h6.5" opacity=".55"/>
+    <path d="M55.5 13.5v6M52.5 16.5h6" opacity=".55"/>
+    <circle cx="13" cy="54" r="2" opacity=".4"/>
+  </symbol>
+  <symbol id="i-empty-music" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 48V22.5l25-5.4v25"/><ellipse cx="22.5" cy="48.5" rx="6" ry="5.2"/><ellipse cx="47.5" cy="42.5" rx="6" ry="5.2"/>
+    <path d="M28 30.5 53 25" opacity=".45"/>
+    <path d="M58 52v5M55.5 54.5h5" opacity=".45"/>
+  </symbol>
+  <symbol id="i-empty-download" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21.5 50.5h27a9.5 9.5 0 0 0 1.3-18.8 14 14 0 0 0-26.7-2.6 9.3 9.3 0 0 0-1.6 21.4Z"/>
+    <path d="M36 30v14M30 38.5l6 6 6-6"/>
+    <path d="M17 58.5h38" opacity=".4"/>
+  </symbol>
+  <symbol id="i-empty-folder" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 24.5a5 5 0 0 1 5-5h9c1.4 0 2.7.6 3.7 1.7l3 3.3H58a5 5 0 0 1 5 5v22a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5v-27Z"/>
+    <path d="M29 40a7 7 0 0 1 7-7 7 7 0 0 1 7 7v6H29v-6Z" opacity=".55"/>
+    <path d="M36 33v-6.3" opacity=".55"/>
+  </symbol>
+  <symbol id="i-empty-queue" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="18" cy="22" r="2.2" opacity=".5"/><circle cx="18" cy="36" r="2.2" opacity=".5"/><circle cx="18" cy="50" r="2.2" opacity=".5"/>
+    <path d="M27 22h27M27 36h27M27 50h17"/>
+    <path d="M48 44.5v-11l10-2.2v9" opacity=".55"/>
+  </symbol>
+  <symbol id="i-empty-cloud" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 48.5h28a10 10 0 0 0 1.4-19.9 14.5 14.5 0 0 0-27.8-2.7A9.8 9.8 0 0 0 22 48.5Z"/>
+    <path d="M36 30v12M31 37l5 5 5-5" opacity=".55"/>
+  </symbol>
+  <symbol id="i-empty-qr" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="12" y="12" width="20" height="20" rx="3.5"/><rect x="40" y="12" width="20" height="20" rx="3.5"/><rect x="12" y="40" width="20" height="20" rx="3.5"/>
+    <path d="M40 40h7v7h-7z" fill="currentColor" stroke="none" opacity=".7"/>
+    <path d="M52 40h8M40 52h8M52 52h8v8M12 62h0"/>
+    <circle cx="60" cy="60" r="0" opacity="0"/>
+  </symbol>
+  <symbol id="i-empty-wifi" viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 20.5 58 57"/><path d="M26.5 40.5a16 16 0 0 1 19-2.7"/><path d="M19 33.5a27 27 0 0 1 8.4-4.7"/>
+    <path d="M45.3 29a27 27 0 0 0-5.5-2.4"/><path d="M36 51.5h.01"/>
+    <path d="M19 20.5c10-6 24-6 34 0" opacity=".35"/>
+  </symbol>
+</svg>
+
+<!-- =========================================================================
+     顶部导航
+     ========================================================================= -->
+<header class="topbar">
+  <div class="topbar__inner">
+    <div class="brand">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32">
+          <defs>
+            <linearGradient id="brandGrad" x1="6" y1="4" x2="26" y2="28" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#4f8cff"/><stop offset="1" stop-color="#7cc4ff"/>
+            </linearGradient>
+          </defs>
+          <rect x="1" y="1" width="30" height="30" rx="9" fill="rgba(79,140,255,.1)" stroke="rgba(124,196,255,.22)"/>
+          <g stroke="url(#brandGrad)" stroke-width="2.1" stroke-linecap="round">
+            <path d="M9.5 13.4v5.2"/><path d="M13.6 10.2v11.6"/><path d="M17.7 12v8"/><path d="M21.8 14.1v3.8"/>
+          </g>
+        </svg>
+      </span>
+      <span class="brand__text">
+        <span class="brand__name">小爱音乐中枢</span>
+        <span class="brand__sub">DLNA 音乐中枢</span>
+      </span>
+    </div>
+
+    <span class="conn conn--pending" id="conn" title="服务连接状态">
+      <span class="conn__dot" aria-hidden="true"></span>
+      <span class="conn__text" id="connText">连接中</span>
+    </span>
+
+    <div class="topbar__actions">
+      <label class="device-picker" title="当前音箱设备">
+        <svg class="icon" aria-hidden="true"><use href="#i-device"/></svg>
+        <select class="device-picker__select" id="deviceSelect" aria-label="选择音箱设备">
+          <option value="">加载中…</option>
+        </select>
+        <svg class="icon device-picker__arrow" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+      </label>
+      <button class="icon-btn icon-btn--bordered" id="scanBtn" type="button" title="发现设备（SSDP 扫描）" aria-label="发现设备">
+        <svg class="icon" aria-hidden="true"><use href="#i-scan"/></svg>
+      </button>
+      <button class="account" id="accountBtn" type="button" aria-haspopup="dialog" aria-label="网易云账号">
+        <span class="account__avatar" id="accountAvatar" aria-hidden="true"></span>
+        <span class="account__name" id="accountName">未登录</span>
+        <span class="tag tag--vip" id="accountVip" hidden>VIP</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <!-- 401 / 密码提示 -->
+  <div class="shell-alert" id="authBanner" role="alert" hidden>
+    <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+    <span class="shell-alert__text">服务已启用访问密码，请在浏览器弹窗中完成登录。</span>
+    <button class="btn btn--ghost btn--sm" id="authReloadBtn" type="button">重新加载</button>
+  </div>
+
+  <main class="layout">
+    <!-- ======================= 左栏：播放器 ======================= -->
+    <aside class="stage" aria-label="播放器">
+      <!-- 外部中断横幅 -->
+      <div class="banner" id="interruptBanner" role="alert" hidden>
+        <span class="banner__icon" aria-hidden="true"><svg class="icon"><use href="#i-alert"/></svg></span>
+        <div class="banner__body">
+          <p class="banner__title" id="interruptTitle">音箱已被语音/其他控制器暂停</p>
+          <p class="banner__meta" id="interruptMeta"></p>
+        </div>
+        <button class="btn btn--primary btn--sm banner__action" id="interruptResumeBtn" type="button">
+          <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>继续播放</span>
+        </button>
+        <button class="icon-btn banner__close" id="interruptCloseBtn" type="button" title="关闭提示" aria-label="关闭提示">
+          <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+        </button>
+      </div>
+
+      <section class="player card" id="playerCard">
+        <!-- 首屏骨架 -->
+        <div class="player__skeleton" aria-hidden="true">
+          <div class="sk-row">
+            <div class="sk sk--cover"></div>
+            <div class="sk-stack">
+              <div class="sk sk--line sk--w60"></div>
+              <div class="sk sk--line sk--w42"></div>
+              <div class="sk sk--line sk--w78"></div>
+            </div>
+          </div>
+          <div class="sk sk--bar"></div>
+          <div class="sk sk--control"></div>
+        </div>
+
+        <div class="player__content" id="playerContent">
+          <div class="player__head">
+            <div class="player__cover" id="cover" aria-hidden="true">
+              <span class="player__cover-char" id="coverChar">♪</span>
+            </div>
+            <div class="player__meta">
+              <span class="badge badge--muted" id="playerBadge">
+                <span class="badge__dot" aria-hidden="true"></span>
+                <span class="badge__text" id="playerBadgeText">已停止</span>
+              </span>
+              <h1 class="player__title" id="playerTitle" title="未在播放">未在播放</h1>
+              <p class="player__artist" id="playerArtist">搜索一首歌，推送到音箱</p>
+              <p class="player__queue" id="playerQueue"></p>
+            </div>
+          </div>
+
+          <div class="progress" id="progress" role="slider" tabindex="0"
+               aria-label="播放进度" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0" aria-valuetext="00:00 / 00:00">
+            <div class="progress__track">
+              <div class="progress__fill" id="progressFill"></div>
+              <div class="progress__thumb" id="progressThumb"></div>
+            </div>
+            <div class="progress__bubble" id="progressBubble" aria-hidden="true">00:00</div>
+          </div>
+          <div class="player__times">
+            <span class="num" id="timeNow">00:00</span>
+            <span class="num" id="timeTotal">00:00</span>
+          </div>
+
+          <div class="transport">
+            <div class="transport__group">
+              <button class="transport__btn" id="prevBtn" type="button" title="上一首" aria-label="上一首">
+                <svg class="icon" aria-hidden="true"><use href="#i-prev"/></svg>
+              </button>
+              <button class="transport__play" id="playToggleBtn" type="button" title="播放" aria-label="播放">
+                <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg>
+              </button>
+              <button class="transport__btn" id="nextBtn" type="button" title="下一首" aria-label="下一首">
+                <svg class="icon" aria-hidden="true"><use href="#i-next"/></svg>
+              </button>
+              <button class="icon-btn transport__stop" id="stopBtn" type="button" title="停止播放" aria-label="停止播放">
+                <svg class="icon" aria-hidden="true"><use href="#i-stop"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="vol">
+            <button class="icon-btn vol__icon" id="muteBtn" type="button" title="静音 / 取消静音" aria-label="静音">
+              <svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg>
+            </button>
+            <input class="range" id="volumeSlider" type="range" min="0" max="100" step="1" value="30" aria-label="音量">
+            <span class="vol__value num" id="volumeValue">30</span>
+          </div>
+
+          <div class="player__foot">
+            <label class="select select--quality" title="音质档位">
+              <span class="select__label">音质</span>
+              <select class="select__input" id="qualitySelect" aria-label="音质档位"></select>
+              <svg class="icon select__arrow" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </label>
+            <div class="segmented segmented--compact" id="modeGroup" role="radiogroup" aria-label="播放模式"></div>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ======================= 右栏：功能面板 ======================= -->
+    <section class="content" aria-label="音乐管理">
+      <nav class="tabs" id="tabs" role="tablist" aria-label="功能标签页">
+        <span class="tabs__indicator" id="tabIndicator" aria-hidden="true"></span>
+        <button class="tab is-active" id="tab-search" data-tab="search" type="button" role="tab" aria-selected="true" aria-controls="panel-search">
+          <svg class="icon" aria-hidden="true"><use href="#i-search"/></svg><span>搜索</span>
+        </button>
+        <button class="tab" id="tab-playlists" data-tab="playlists" type="button" role="tab" aria-selected="false" aria-controls="panel-playlists">
+          <svg class="icon" aria-hidden="true"><use href="#i-disc"/></svg><span>歌单</span>
+        </button>
+        <button class="tab" id="tab-queue" data-tab="queue" type="button" role="tab" aria-selected="false" aria-controls="panel-queue">
+          <svg class="icon" aria-hidden="true"><use href="#i-queue"/></svg><span>队列</span>
+        </button>
+        <button class="tab" id="tab-local" data-tab="local" type="button" role="tab" aria-selected="false" aria-controls="panel-local">
+          <svg class="icon" aria-hidden="true"><use href="#i-folder"/></svg><span>本地</span>
+        </button>
+        <button class="tab" id="tab-downloads" data-tab="downloads" type="button" role="tab" aria-selected="false" aria-controls="panel-downloads">
+          <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span>下载</span>
+          <span class="tab__badge" id="downloadBadge" hidden>0</span>
+        </button>
+        <button class="tab" id="tab-settings" data-tab="settings" type="button" role="tab" aria-selected="false" aria-controls="panel-settings">
+          <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg><span>设置</span>
+        </button>
+      </nav>
+
+      <div class="panels">
+        <!-- ------------------------- 搜索 ------------------------- -->
+        <section class="panel card" id="panel-search" data-panel="search" role="tabpanel" aria-label="搜索">
+          <div class="toolbar">
+            <div class="field field--search">
+              <svg class="icon field__icon" aria-hidden="true"><use href="#i-search"/></svg>
+              <input class="field__input" id="searchInput" type="search" placeholder="搜索歌曲 / 歌手 / 专辑…"
+                     autocomplete="off" enterkeyhint="search" aria-label="搜索歌曲" spellcheck="false">
+              <button class="icon-btn field__clear" id="searchClear" type="button" title="清空搜索" aria-label="清空搜索" hidden>
+                <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+              </button>
+            </div>
+            <label class="select select--target" title="加入歌单的目标歌单">
+              <span class="select__label">加入至</span>
+              <select class="select__input" id="searchTarget" aria-label="加入歌单的目标歌单"></select>
+              <svg class="icon select__arrow" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </label>
+          </div>
+          <p class="hint" id="searchHint" role="status">输入关键词，自动搜索网易云曲库</p>
+          <div class="list" id="searchList"></div>
+        </section>
+
+        <!-- ------------------------- 歌单 ------------------------- -->
+        <section class="panel card" id="panel-playlists" data-panel="playlists" role="tabpanel" aria-label="歌单" hidden>
+          <div class="toolbar">
+            <label class="select select--grow">
+              <svg class="icon" aria-hidden="true"><use href="#i-disc"/></svg>
+              <select class="select__input" id="playlistSelect" aria-label="选择歌单"></select>
+              <svg class="icon select__arrow" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </label>
+            <button class="icon-btn icon-btn--bordered" id="newPlaylistBtn" type="button" title="新建歌单" aria-label="新建歌单">
+              <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+            </button>
+            <button class="icon-btn icon-btn--bordered" id="renamePlaylistBtn" type="button" title="重命名歌单" aria-label="重命名歌单">
+              <svg class="icon" aria-hidden="true"><use href="#i-edit"/></svg>
+            </button>
+            <button class="icon-btn icon-btn--bordered icon-btn--danger" id="deletePlaylistBtn" type="button" title="删除歌单" aria-label="删除歌单">
+              <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>
+            </button>
+          </div>
+
+          <div class="toolbar toolbar--actions">
+            <button class="btn btn--primary btn--sm" id="playAllBtn" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>播放整张</span>
+            </button>
+            <button class="btn btn--ghost btn--sm" id="downloadWholeBtn" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span>下载整张</span>
+            </button>
+            <button class="btn btn--ghost btn--sm" id="neteaseToggleBtn" type="button" aria-expanded="false" aria-controls="neteasePanel">
+              <svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg><span>网易云导入</span>
+            </button>
+            <span class="meta" id="playlistMeta"></span>
+          </div>
+
+          <!-- 网易云导入面板 -->
+          <div class="netease" id="neteasePanel" hidden>
+            <div class="netease__head">
+              <h3 class="netease__title">
+                <svg class="icon" aria-hidden="true"><use href="#i-cloud"/></svg><span>网易云歌单</span>
+              </h3>
+              <div class="netease__actions">
+                <button class="btn btn--ghost btn--sm" id="syncAllBtn" type="button">
+                  <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg><span>全部同步</span>
+                </button>
+                <button class="icon-btn" id="neteaseCloseBtn" type="button" title="收起" aria-label="收起网易云导入">
+                  <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="sync-progress" id="syncProgress" hidden>
+              <div class="sync-progress__bar"><i class="sync-progress__fill" id="syncProgressFill"></i></div>
+              <p class="hint" id="syncProgressText"></p>
+            </div>
+            <div class="list list--compact" id="neteaseList"></div>
+          </div>
+
+          <div class="tracks" id="tracksList"></div>
+        </section>
+
+        <!-- ------------------------- 队列 ------------------------- -->
+        <section class="panel card" id="panel-queue" data-panel="queue" role="tabpanel" aria-label="播放队列" hidden>
+          <div class="panel-head">
+            <h2 class="panel-head__title">播放队列</h2>
+            <span class="meta" id="queueMeta"></span>
+          </div>
+          <div class="list" id="queueList"></div>
+        </section>
+
+        <!-- ------------------------- 本地曲库 ------------------------- -->
+        <section class="panel card" id="panel-local" data-panel="local" role="tabpanel" aria-label="本地曲库" hidden>
+          <div class="toolbar">
+            <div class="field field--search">
+              <svg class="icon field__icon" aria-hidden="true"><use href="#i-search"/></svg>
+              <input class="field__input" id="localInput" type="search" placeholder="搜索本地曲库…"
+                     autocomplete="off" enterkeyhint="search" aria-label="搜索本地曲库" spellcheck="false">
+              <button class="icon-btn field__clear" id="localClear" type="button" title="清空搜索" aria-label="清空搜索" hidden>
+                <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+              </button>
+            </div>
+            <button class="btn btn--ghost btn--sm" id="localScanBtn" type="button">
+              <svg class="icon" aria-hidden="true"><use href="#i-scan"/></svg><span>扫描目录</span>
+            </button>
+            <label class="select select--target" title="加入歌单的目标歌单">
+              <span class="select__label">加入至</span>
+              <select class="select__input" id="localTarget" aria-label="加入歌单的目标歌单"></select>
+              <svg class="icon select__arrow" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </label>
+          </div>
+          <p class="hint" id="localMeta"></p>
+          <div class="list" id="localList"></div>
+        </section>
+
+        <!-- ------------------------- 下载 ------------------------- -->
+        <section class="panel card" id="panel-downloads" data-panel="downloads" role="tabpanel" aria-label="下载任务" hidden>
+          <div class="stats" id="downloadStats">
+            <div class="stat stat--pending">
+              <span class="stat__icon" aria-hidden="true"><svg class="icon"><use href="#i-clock"/></svg></span>
+              <span class="stat__num num" id="statPending">0</span>
+              <span class="stat__label">排队中</span>
+            </div>
+            <div class="stat stat--running">
+              <span class="stat__icon" aria-hidden="true"><svg class="icon"><use href="#i-download"/></svg></span>
+              <span class="stat__num num" id="statRunning">0</span>
+              <span class="stat__label">下载中</span>
+            </div>
+            <div class="stat stat--done">
+              <span class="stat__icon" aria-hidden="true"><svg class="icon"><use href="#i-check"/></svg></span>
+              <span class="stat__num num" id="statDone">0</span>
+              <span class="stat__label">已完成</span>
+            </div>
+            <div class="stat stat--failed">
+              <span class="stat__icon" aria-hidden="true"><svg class="icon"><use href="#i-alert"/></svg></span>
+              <span class="stat__num num" id="statFailed">0</span>
+              <span class="stat__label">失败</span>
+            </div>
+          </div>
+          <div class="panel-head panel-head--row">
+            <h2 class="panel-head__title">下载任务</h2>
+            <div class="panel-head__actions">
+              <span class="meta" id="downloadMeta"></span>
+              <button class="btn btn--ghost btn--sm" id="downloadRetryAllBtn" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg><span>重试失败</span>
+              </button>
+            </div>
+          </div>
+          <div class="list" id="downloadList"></div>
+        </section>
+
+        <!-- ------------------------- 设置 ------------------------- -->
+        <section class="panel panel--settings" id="panel-settings" data-panel="settings" role="tabpanel" aria-label="设置" hidden>
+          <div class="settings">
+            <section class="section card">
+              <header class="section__head">
+                <span class="section__icon" aria-hidden="true"><svg class="icon"><use href="#i-sliders"/></svg></span>
+                <div class="section__titles">
+                  <h2 class="section__title">播放偏好</h2>
+                  <p class="section__desc">音质与播放模式会保存到服务端</p>
+                </div>
+              </header>
+              <div class="set-row">
+                <div class="set-row__label">
+                  <span>音质档位</span>
+                  <small class="hint">在线播放与下载使用的默认音质</small>
+                </div>
+                <label class="select">
+                  <select class="select__input" id="settingsQuality" aria-label="音质档位"></select>
+                  <svg class="icon select__arrow" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+                </label>
+              </div>
+              <div class="set-row set-row--stack">
+                <div class="set-row__label">
+                  <span>播放模式</span>
+                  <small class="hint">控制队列自动续播行为</small>
+                </div>
+                <div class="segmented segmented--wide" id="settingsModes" role="radiogroup" aria-label="播放模式"></div>
+              </div>
+            </section>
+
+            <section class="section card">
+              <header class="section__head">
+                <span class="section__icon" aria-hidden="true"><svg class="icon"><use href="#i-moon"/></svg></span>
+                <div class="section__titles">
+                  <h2 class="section__title">免打扰</h2>
+                  <p class="section__desc">在设定时段内不再自动续播</p>
+                </div>
+              </header>
+              <div class="set-row">
+                <div class="set-row__label">
+                  <span>启用免打扰</span>
+                  <small class="hint" id="quietHint">当前未启用</small>
+                </div>
+                <button class="switch" id="quietToggle" type="button" role="switch" aria-checked="false" aria-label="启用免打扰">
+                  <span class="switch__thumb"></span>
+                </button>
+              </div>
+              <div class="set-row set-row--times" id="quietTimes">
+                <div class="time-field">
+                  <label for="quietStart">开始</label>
+                  <input id="quietStart" type="time" step="60" value="23:30">
+                </div>
+                <div class="time-field">
+                  <label for="quietEnd">结束</label>
+                  <input id="quietEnd" type="time" step="60" value="08:00">
+                </div>
+              </div>
+            </section>
+
+            <section class="section card">
+              <header class="section__head">
+                <span class="section__icon" aria-hidden="true"><svg class="icon"><use href="#i-device"/></svg></span>
+                <div class="section__titles">
+                  <h2 class="section__title">设备</h2>
+                  <p class="section__desc">选择要投放的音箱，或扫描局域网新设备</p>
+                </div>
+              </header>
+              <div class="device-list" id="settingsDeviceList"></div>
+              <div class="set-row">
+                <div class="set-row__label">
+                  <span>发现新设备</span>
+                  <small class="hint">通过 SSDP 扫描局域网内的 DLNA 音箱，约需 5 秒</small>
+                </div>
+                <button class="btn btn--ghost btn--sm" id="settingsScanBtn" type="button">
+                  <svg class="icon" aria-hidden="true"><use href="#i-scan"/></svg><span>扫描</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="section card">
+              <header class="section__head">
+                <span class="section__icon" aria-hidden="true"><svg class="icon"><use href="#i-user"/></svg></span>
+                <div class="section__titles">
+                  <h2 class="section__title">网易云账号</h2>
+                  <p class="section__desc">登录后可导入歌单、播放 VIP 曲目</p>
+                </div>
+              </header>
+              <div class="account-panel" id="settingsAccount"></div>
+            </section>
+
+            <section class="section card">
+              <header class="section__head">
+                <span class="section__icon" aria-hidden="true"><svg class="icon"><use href="#i-info"/></svg></span>
+                <div class="section__titles">
+                  <h2 class="section__title">服务信息</h2>
+                  <p class="section__desc">当前连接的中枢运行信息</p>
+                </div>
+              </header>
+              <dl class="info-list">
+                <div class="info-list__row"><dt>版本</dt><dd class="num" id="serverVersion">—</dd></div>
+                <div class="info-list__row"><dt>服务地址</dt><dd class="num" id="serverAddress">—</dd></div>
+                <div class="info-list__row"><dt>曲库目录</dt><dd class="ellipsis" id="serverMusicDir">—</dd></div>
+                <div class="info-list__row"><dt>当前设备</dt><dd class="ellipsis" id="serverDevice">—</dd></div>
+              </dl>
+            </section>
+
+            <section class="section card">
+              <header class="section__head">
+                <span class="section__icon" aria-hidden="true"><svg class="icon"><use href="#i-refresh"/></svg></span>
+                <div class="section__titles">
+                  <h2 class="section__title">本地缓存</h2>
+                  <p class="section__desc">仅清理浏览器端偏好，不影响服务器数据</p>
+                </div>
+              </header>
+              <div class="set-row">
+                <div class="set-row__label">
+                  <span>清除本地缓存</span>
+                  <small class="hint">重置标签页记忆、目标歌单与音量记忆</small>
+                </div>
+                <button class="btn btn--ghost btn--sm" id="clearCacheBtn" type="button">清除缓存</button>
+              </div>
+            </section>
+          </div>
+        </section>
+      </div>
+
+      <footer class="foot">
+        <span class="foot__note">DLNA 直推 · 网易云音源 · 局域网内使用</span>
+        <span class="foot__ver num" id="footVersion"></span>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<!-- =========================================================================
+     网易云账号模态框
+     ========================================================================= -->
+<div class="modal" id="accountModal" hidden>
+  <div class="modal__backdrop" data-close="accountModal"></div>
+  <div class="modal__card modal__card--account" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+    <header class="modal__head">
+      <h2 class="modal__title" id="accountModalTitle">网易云账号</h2>
+      <button class="icon-btn" id="accountModalClose" type="button" title="关闭" aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </header>
+    <div class="modal__body" id="accountModalBody"></div>
+  </div>
+</div>
+
+<!-- =========================================================================
+     通用对话框（确认 / 输入）
+     ========================================================================= -->
+<div class="modal" id="dialog" hidden>
+  <div class="modal__backdrop" data-close="dialog"></div>
+  <div class="modal__card modal__card--dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <header class="modal__head">
+      <h2 class="modal__title" id="dialogTitle">提示</h2>
+      <button class="icon-btn" id="dialogClose" type="button" title="关闭" aria-label="关闭">
+        <svg class="icon" aria-hidden="true"><use href="#i-close"/></svg>
+      </button>
+    </header>
+    <div class="modal__body" id="dialogBody"></div>
+    <footer class="modal__foot" id="dialogActions"></footer>
+  </div>
+</div>
+
+<!-- Toast 通知 -->
+<div class="toasts" id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+
+<noscript>
+  <div class="noscript">需要启用 JavaScript 才能使用小爱音乐中枢。</div>
+</noscript>
+
+<script src="/app.js" defer></script>
+</body>
+</html>
