@@ -101,7 +101,10 @@ make test     # pytest -q               → 必须全绿（Python 3.9 / 3.11 / 3
   新克隆若没有该 remote：
 
   ```bash
+  # SSH（已配置 GitHub SSH key 时）
   git remote add github git@github.com:reY2ox/xiaoai-music-hub.git
+  # 或 HTTPS（依赖 credential helper，仓库当前使用这种方式）
+  git remote add github https://github.com/reY2ox/xiaoai-music-hub.git
   ```
 
 - 发布流程：`make lint && make test` 全绿 → 改版本号 + CHANGELOG →
