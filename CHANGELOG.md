@@ -26,6 +26,8 @@ v3 是对 v2 的全面重构：拆分 `xiaoai_hub/` 包、重写播放状态机�
   systemd 单元、`deploy/Dockerfile` + `docker-compose.yml`（ffmpeg、非 root、`/data` 卷、healthcheck）。
 - **文档**：重写 `README.md`，新增 `docs/ARCHITECTURE.md`、`docs/DEVELOPMENT.md`、
   `docs/TROUBLESHOOTING.md`、`AGENTS.md`、本 CHANGELOG。
+- **下载完成态**：先完成入库（`scan_file` / `song_key` / `tracks.local_id` 回填）再标记 `done`，
+  避免轮询方看到「已完成但尚未入库」的中间态。
 - **下载**：内容校验（`Content-Type` + 文件魔数）、错误分类（永久性不重试 / 瞬时性指数退避）、
   可取消（内存标记 + DB 标记，256KB 粒度检查）、`.part` 断点续传、启动恢复、完成后单文件增量入库。
 - **本地曲库**：增量扫描（`(path,size,mtime)`）、单文件 `scan_file()`、可选 prune、
